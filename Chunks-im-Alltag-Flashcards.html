@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chunks im Alltag – Flashcards</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: linear-gradient(135deg, #fdf6ec 0%, #f3ece0 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 28px 16px 80px; color: #3a3226;
+  }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; text-align: center; }
+  .subtitle { font-size: 14px; color: #7a6f5e; margin: 0 0 18px; text-align: center; max-width: 520px; }
+  .mode-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; justify-content: center; }
+  .mode-btn {
+    font-size: 13.5px; font-weight: 700; padding: 8px 16px; border-radius: 10px;
+    border: 2px solid #e8ddc8; background: #fdf9f2; color: #6a5f4b; cursor: pointer;
+  }
+  .mode-btn.active { background: #4a6b57; border-color: #4a6b57; color: #fff; }
+  .deck-info { font-size: 13px; color: #9a8f7a; margin-bottom: 14px; }
+
+  .scene { width: min(92vw, 520px); height: 420px; perspective: 1200px; cursor: pointer; }
+  .flipper {
+    position: relative; width: 100%; height: 100%;
+    transition: transform 0.55s ease; transform-style: preserve-3d;
+  }
+  .flipper.flipped { transform: rotateY(180deg); }
+  .face {
+    position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    background: #fff; border: 2px solid #e8ddc8; border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(120,100,60,0.15);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px 24px; text-align: center; overflow-y: auto;
+  }
+  .back { transform: rotateY(180deg); }
+  .placeholder { font-size: 17px; color: #b0a68f; }
+  .emoji { font-size: 54px; margin-bottom: 12px; }
+  .chunk-big { font-size: 26px; font-weight: 800; color: #2f2a20; line-height: 1.35; margin-bottom: 10px; }
+  .chunk-big.th { color: #315240; }
+  .tap-hint { font-size: 12.5px; color: #b0a68f; margin-top: 8px; }
+  .label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    color: #9a8f7a; margin: 12px 0 5px;
+  }
+  .back-main { font-size: 21px; font-weight: 800; color: #315240; line-height: 1.35; }
+  .back-main.de { color: #2f2a20; }
+  .situation-box {
+    width: 100%; background: #fdf1de; border: 1px solid #eadfc9; border-radius: 12px;
+    padding: 9px 12px; text-align: left;
+  }
+  .situation-th { font-size: 13.5px; color: #6a4a1a; font-weight: 600; }
+  .situation-de { font-size: 12.5px; color: #8a6a3a; margin-top: 2px; }
+  .example-box {
+    width: 100%; background: #eef4ef; border: 1px solid #d3e4d7; border-radius: 12px;
+    padding: 10px 12px; text-align: left;
+  }
+  .example-de { font-size: 15px; font-weight: 700; color: #315240; line-height: 1.45; }
+  .example-th { font-size: 13px; color: #6a8a78; margin-top: 4px; }
+  .audio-row { display: flex; gap: 8px; margin-top: 12px; }
+  .audio-btn {
+    font-size: 12.5px; font-weight: 700; padding: 7px 14px; border-radius: 10px;
+    border: none; background: #4a6b57; color: #fff; cursor: pointer;
+  }
+  .audio-btn:hover { background: #3d5947; }
+
+  .buttons-row { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; justify-content: center; }
+  .buttons-row button {
+    font-size: 15px; font-weight: 600; padding: 12px 22px; border-radius: 12px;
+    border: none; cursor: pointer;
+  }
+  .btn-primary { background: #d68c3f; color: #fff; }
+  .btn-primary:hover { background: #c47b30; }
+  .btn-secondary { background: #eee3d0; color: #5a4e39; }
+  .btn-secondary:hover { background: #e2d5bc; }
+  .btn-flip { background: #4a6b57; color: #fff; }
+
+  footer { margin-top: 30px; font-size: 12px; color: #b0a68f; text-align: center; max-width: 520px; }
+  .watermark {
+    position: fixed; bottom: 12px; right: 16px; font-size: 12px; font-weight: 600;
+    color: #b0a68f; background: rgba(255,255,255,0.7); padding: 4px 10px; border-radius: 8px; z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<h1>Chunks im Alltag</h1>
+<p class="subtitle">50 การ์ดคำศัพท์สำเร็จรูป (Chunks) A2–B1 · แตะการ์ดเพื่อพลิกดูคำแปล สถานการณ์ที่ใช้ และประโยคตัวอย่าง</p>
+
+<div class="mode-row">
+  <button class="mode-btn active" id="modeDe">🇩🇪 เยอรมัน → ไทย</button>
+  <button class="mode-btn" id="modeTh">🇹🇭 ไทย → เยอรมัน</button>
+</div>
+<p class="deck-info" id="deckInfo">การ์ดเหลือ: 50 / 50</p>
+
+<div class="scene" id="scene">
+  <div class="flipper" id="flipper">
+    <div class="face front" id="frontFace"><p class="placeholder">กดปุ่ม "การ์ดใบถัดไป" เพื่อเริ่ม</p></div>
+    <div class="face back" id="backFace"></div>
+  </div>
+</div>
+
+<div class="buttons-row">
+  <button class="btn-primary" id="nextBtn">การ์ดใบถัดไป →</button>
+  <button class="btn-flip" id="flipBtn">🔄 พลิกการ์ด</button>
+  <button class="btn-secondary" id="shuffleBtn">สับไพ่ใหม่</button>
+</div>
+
+<footer>แตะที่การ์ดหรือกด "พลิกการ์ด" เพื่อดูคำตอบ · การ์ดจะไม่ซ้ำจนครบ 50 ใบ · เปิดไฟล์นี้ในเบราว์เซอร์ แชร์หน้าจอผ่าน Zoom ได้เลย</footer>
+<div class="watermark">Deutsch mit Monmanat</div>
+
+<script>
+// [emoji, chunk_de, chunk_th, situation_th, situation_de, example_de, example_th]
+const deck = [
+["😩","Ich habe keine Lust.","ฉันไม่อยากทำเลย","ตอนถูกชวนทำสิ่งที่ไม่อยากทำ","Wenn du etwas nicht tun möchtest","Ich habe heute keine Lust zu kochen.","วันนี้ฉันไม่อยากทำอาหารเลย"],
+["🤷","Das kommt darauf an.","แล้วแต่สถานการณ์","ตอนคำตอบขึ้นอยู่กับเงื่อนไขบางอย่าง","Wenn die Antwort von etwas abhängt","Ob ich komme? Das kommt darauf an, wie das Wetter ist.","ฉันจะไปไหมเหรอ แล้วแต่ว่าอากาศเป็นยังไง"],
+["🏃","Ich bin gleich da.","เดี๋ยวฉันไปถึงแล้ว","ตอนบอกเพื่อนว่าใกล้ถึงแล้ว","Wenn du fast angekommen bist","Warte kurz, ich bin gleich da!","รอแป๊บนะ เดี๋ยวฉันถึงแล้ว"],
+["🙏","Tut mir leid.","ขอโทษนะ / เสียใจด้วย","ตอนขอโทษหรือแสดงความเสียใจ","Beim Entschuldigen oder Mitgefühl","Tut mir leid, dass ich zu spät bin.","ขอโทษที่ฉันมาสาย"],
+["🌞","Schönes Wochenende!","สุขสันต์วันหยุดสุดสัปดาห์","ตอนบอกลาก่อนวันศุกร์เย็น","Beim Verabschieden am Freitag","Bis Montag! Schönes Wochenende!","เจอกันวันจันทร์ ขอให้มีวันหยุดสุดสัปดาห์ที่ดีนะ"],
+["👋","Was gibt's Neues?","มีอะไรใหม่ๆไหม","ตอนทักเพื่อนที่ไม่ได้เจอกันนาน","Beim Treffen mit Freunden","Hey, lange nicht gesehen! Was gibt's Neues?","เฮ้ ไม่ได้เจอกันนานเลย มีอะไรใหม่ๆไหม"],
+["👍","Alles klar.","โอเค / เข้าใจแล้ว","ตอนตอบรับหรือยืนยัน","Wenn du etwas bestätigst","Alles klar, dann treffen wir uns um acht.","โอเค งั้นเจอกันตอนสองทุ่ม"],
+["🤔","Keine Ahnung.","ไม่รู้เลย","ตอนถูกถามเรื่องที่ไม่รู้","Wenn du etwas nicht weißt","Wo mein Schlüssel ist? Keine Ahnung.","กุญแจฉันอยู่ไหนเหรอ ไม่รู้เลย"],
+["🧘","Mach dir keine Sorgen.","ไม่ต้องกังวลนะ","ตอนปลอบใจคนที่เป็นห่วง","Wenn jemand besorgt ist","Mach dir keine Sorgen, das schaffen wir schon.","ไม่ต้องกังวลนะ เราทำได้แน่"],
+["😌","Kein Problem.","ไม่มีปัญหา / ไม่เป็นไร","ตอนมีคนขอบคุณหรือขอโทษ","Wenn sich jemand bedankt","Danke für deine Hilfe! – Kein Problem.","ขอบคุณที่ช่วยนะ – ไม่เป็นไรเลย"],
+["💸","Ich bin pleite.","ฉันเงินหมด / ไม่มีเงินเลย","ตอนปฏิเสธเพราะไม่มีเงิน","Wenn du gerade kein Geld hast","Ich kann nicht mitkommen, ich bin pleite.","ฉันไปด้วยไม่ได้ ฉันเงินหมด"],
+["🍽️","Ich habe Hunger.","ฉันหิว","ตอนอยากกินข้าว","Wenn du etwas essen möchtest","Ich habe Hunger, gehen wir was essen?","ฉันหิวแล้ว ไปกินข้าวกันไหม"],
+["💡","Lass uns das machen.","ไปทำสิ่งนี้กันเถอะ","ตอนชวนเพื่อนทำอะไรร่วมกัน","Beim Vorschlag an Freunde","Lass uns heute Abend ins Kino gehen.","คืนนี้ไปดูหนังกันเถอะ"],
+["🤝","Wie wär's mit …?","ถ้า…ล่ะ เป็นไง","ตอนเสนอไอเดียอย่างนุ่มนวล","Wenn du einen Vorschlag machst","Wie wär's mit einem Spaziergang im Park?","ไปเดินเล่นที่สวนสาธารณะเป็นไง"],
+["🤷‍♀️","Das ist mir egal.","ฉันไม่สนใจ / ได้หมด","ตอนไม่มีความเห็นเรื่องตัวเลือก","Wenn dir beide Optionen recht sind","Pizza oder Pasta? Das ist mir egal.","พิซซ่าหรือพาสต้าเหรอ ฉันได้หมด"],
+["🤞","Ich drücke dir die Daumen.","ขอให้โชคดีนะ","ตอนเอาใจช่วยก่อนสอบหรือสัมภาษณ์","Vor einer Prüfung oder einem Gespräch","Morgen ist deine Prüfung? Ich drücke dir die Daumen!","พรุ่งนี้สอบเหรอ ขอให้โชคดีนะ"],
+["🙅","Auf keinen Fall!","ไม่มีทาง!","ตอนปฏิเสธอย่างชัดเจน","Wenn du etwas klar ablehnst","Soll ich dir mein Auto leihen? – Auf keinen Fall!","จะให้ฉันยืมรถไหม – ไม่มีทาง!"],
+["🍀","Zum Glück!","โชคดีที่…","ตอนเรื่องร้ายผ่านไปได้ด้วยดี","Wenn etwas gut ausgegangen ist","Zum Glück hat mich niemand gesehen.","โชคดีที่ไม่มีใครเห็นฉัน"],
+["⏰","Ich muss los.","ฉันต้องรีบไปแล้ว","ตอนต้องขอตัวกลับ","Wenn du gehen musst","Es ist schon spät, ich muss los.","ดึกแล้ว ฉันต้องไปแล้ว"],
+["👋","Bis später!","เจอกันทีหลังนะ","ตอนบอกลาและจะเจอกันอีกวันนี้","Beim Verabschieden am selben Tag","Ich gehe kurz einkaufen. Bis später!","ฉันออกไปซื้อของแป๊บนึง เจอกันทีหลังนะ"],
+["🤒","Gute Besserung!","หายไวๆนะ","ตอนพูดกับคนที่ป่วย","Wenn jemand krank ist","Du bist erkältet? Gute Besserung!","เป็นหวัดเหรอ หายไวๆนะ"],
+["🥱","Mir ist langweilig.","ฉันเบื่อ","ตอนไม่มีอะไรทำ","Wenn du nichts zu tun hast","Mir ist langweilig, hast du eine Idee?","ฉันเบื่อ มีไอเดียไหม"],
+["😴","Ich bin müde.","ฉันง่วง / เหนื่อย","ตอนอยากพักผ่อน","Wenn du dich erholen möchtest","Ich bin müde, ich gehe früh ins Bett.","ฉันเหนื่อย จะเข้านอนเร็ว"],
+["🚦","Ich habe Verspätung.","ฉันมาสาย","ตอนแจ้งว่าจะไปถึงช้า","Wenn du zu spät kommst","Der Zug hat Verspätung, ich komme später.","รถไฟล่าช้า ฉันจะไปถึงช้านะ"],
+["🚶","Darf ich mal vorbei?","ขอผ่านหน่อยได้ไหม","ตอนขอทางในที่แออัด","In einem vollen Bus oder Laden","Entschuldigung, darf ich mal vorbei?","ขอโทษครับ ขอผ่านหน่อยได้ไหม"],
+["🙋","Können Sie mir helfen?","ช่วยฉันได้ไหมคะ/ครับ","ตอนขอความช่วยเหลืออย่างสุภาพ","Wenn du höflich um Hilfe bittest","Entschuldigung, können Sie mir helfen?","ขอโทษค่ะ ช่วยฉันได้ไหมคะ"],
+["😵","Ich verstehe nur Bahnhof.","ฉันงงเป็นไก่ตาแตก","ตอนฟังไม่เข้าใจเลย","Wenn du gar nichts verstehst","Bei dem Thema verstehe ich nur Bahnhof.","เรื่องนี้ฉันงงเป็นไก่ตาแตกเลย"],
+["😅","Das war knapp!","เฉียดฉิวมาก!","ตอนเกือบพลาดแต่ทัน","Wenn etwas fast schiefgegangen ist","Das war knapp, der Bus ist gerade noch gekommen!","เฉียดฉิวมาก รถบัสเพิ่งมาทันพอดี"],
+["🙌","Ich bin dabei!","ฉันเอาด้วย!","ตอนตอบรับคำชวน","Wenn du bei etwas mitmachst","Ihr geht grillen? Ich bin dabei!","พวกเธอไปย่างบาร์บีคิวเหรอ ฉันเอาด้วย!"],
+["☝️","Ich bin dran.","ถึงตาฉันแล้ว","ตอนถึงคิวของตัวเอง","Wenn du an der Reihe bist","Entschuldigung, ich bin dran.","ขอโทษครับ ถึงตาผมแล้ว"],
+["🛍️","Ich nehme das.","ฉันเอาอันนี้","ตอนตัดสินใจซื้อของ","Beim Einkaufen","Die Jacke gefällt mir, ich nehme das.","ฉันชอบแจ็คเก็ตตัวนี้ เอาอันนี้ค่ะ"],
+["📅","Das passt mir gut.","สะดวกสำหรับฉัน","ตอนตอบรับเวลานัด","Wenn dir ein Termin passt","Dienstag um zehn? Das passt mir gut.","วันอังคารสิบโมงเหรอ สะดวกเลย"],
+["⚡","Ich habe es eilig.","ฉันรีบ","ตอนไม่มีเวลา","Wenn du wenig Zeit hast","Entschuldigung, ich habe es eilig.","ขอโทษนะ ฉันรีบ"],
+["🕐","Hast du kurz Zeit?","มีเวลาแป๊บนึงไหม","ตอนอยากคุยกับใครสักคน","Wenn du jemanden ansprichst","Hast du kurz Zeit? Ich habe eine Frage.","มีเวลาแป๊บนึงไหม ฉันมีคำถาม"],
+["✋","Moment mal!","เดี๋ยวก่อน!","ตอนอยากขัดจังหวะ","Wenn du kurz unterbrechen willst","Moment mal, das habe ich nicht gesagt!","เดี๋ยวก่อน ฉันไม่ได้พูดแบบนั้นนะ"],
+["🤨","Ich bin mir nicht sicher.","ฉันไม่แน่ใจ","ตอนยังตัดสินใจไม่ได้","Wenn du unsicher bist","Ich bin mir nicht sicher, ob das stimmt.","ฉันไม่แน่ใจว่าเรื่องนี้ถูกต้องหรือเปล่า"],
+["🧠","Das macht Sinn.","มันสมเหตุสมผล","ตอนเข้าใจและเห็นด้วยกับเหตุผล","Wenn eine Erklärung logisch ist","Ach so, jetzt macht das Sinn!","อ๋อ ตอนนี้มันสมเหตุสมผลแล้ว"],
+["😮","Ich bin gespannt.","ฉันอยากรู้จัง / ลุ้นอยู่","ตอนรอผลลัพธ์","Wenn du auf etwas wartest","Ich bin gespannt, wie der Film wird.","ฉันอยากรู้จังว่าหนังจะออกมายังไง"],
+["😤","Mir reicht's!","ฉันทนไม่ไหวแล้ว!","ตอนหมดความอดทน","Wenn du die Geduld verlierst","Mir reicht's, ich gehe jetzt nach Hause.","ฉันทนไม่ไหวแล้ว ขอกลับบ้านเลย"],
+["🙂","Wie läuft's?","เป็นไงบ้าง","ตอนทักทายแบบเป็นกันเอง","Beim lockeren Begrüßen","Hi, wie läuft's bei der Arbeit?","ไง งานเป็นไงบ้าง"],
+["🚗","Ich bin auf dem Weg.","ฉันกำลังเดินทางไป","ตอนแจ้งว่ากำลังไปหา","Wenn du schon unterwegs bist","Keine Sorge, ich bin schon auf dem Weg.","ไม่ต้องห่วง ฉันกำลังไปแล้ว"],
+["📱","Ich melde mich.","ฉันจะติดต่อกลับไป","ตอนสัญญาว่าจะติดต่อ","Wenn du später Bescheid gibst","Ich melde mich morgen bei dir.","พรุ่งนี้ฉันจะติดต่อกลับไปนะ"],
+["😔","Schade eigentlich.","น่าเสียดายจริงๆ","ตอนผิดหวังเล็กน้อย","Wenn du etwas bedauerst","Du kannst nicht kommen? Schade eigentlich.","มาไม่ได้เหรอ น่าเสียดายจริงๆ"],
+["💪","Das lohnt sich.","คุ้มค่านะ","ตอนบอกว่าสิ่งนั้นคุ้ม","Wenn sich etwas auszahlt","Der Kurs ist teuer, aber er lohnt sich.","คอร์สแพงแต่คุ้มค่านะ"],
+["🐢","Immer mit der Ruhe.","ใจเย็นๆ ไม่ต้องรีบ","ตอนบอกให้อีกฝ่ายใจเย็น","Wenn jemand hektisch ist","Immer mit der Ruhe, wir haben genug Zeit.","ใจเย็นๆ เรามีเวลาพอ"],
+["🤧","Ich bin erkältet.","ฉันเป็นหวัด","ตอนบอกอาการป่วย","Beim Krankmelden","Ich bin erkältet und bleibe heute zu Hause.","ฉันเป็นหวัดเลยจะอยู่บ้านวันนี้"],
+["🤕","Ich habe Kopfschmerzen.","ฉันปวดหัว","ตอนบอกอาการที่ร้านขายยา","In der Apotheke","Ich habe seit gestern Kopfschmerzen.","ฉันปวดหัวมาตั้งแต่เมื่อวาน"],
+["💳","Das geht auf mich.","ฉันเลี้ยงเอง","ตอนเลี้ยงข้าวหรือจ่ายแทน","Wenn du die Rechnung bezahlst","Heute Abend geht das auf mich!","คืนนี้ฉันเลี้ยงเอง!"],
+["🛠️","Ich kümmere mich darum.","ฉันจะจัดการเรื่องนี้เอง","ตอนรับผิดชอบเรื่องใดเรื่องหนึ่ง","Wenn du Verantwortung übernimmst","Keine Sorge, ich kümmere mich darum.","ไม่ต้องห่วง ฉันจะจัดการเรื่องนี้เอง"]
+];
+
+let pool = [];
+let mode = 'de';
+let currentItem = null;
+let flipped = false;
+
+function resetPool() {
+  pool = [...Array(deck.length).keys()];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+}
+resetPool();
+
+const flipper = document.getElementById('flipper');
+const frontFace = document.getElementById('frontFace');
+const backFace = document.getElementById('backFace');
+const deckInfo = document.getElementById('deckInfo');
+
+function updateInfo() { deckInfo.textContent = `การ์ดเหลือ: ${pool.length} / ${deck.length}`; }
+
+function speakGerman(text) {
+  if (!('speechSynthesis' in window)) { alert('เบราว์เซอร์นี้ไม่รองรับการอ่านออกเสียง'); return; }
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'de-DE'; u.rate = 0.95;
+  window.speechSynthesis.speak(u);
+}
+
+function render() {
+  if (!currentItem) return;
+  const [emoji, de, th, sitTh, sitDe, exDe, exTh] = currentItem;
+  const frontMain = mode === 'de' ? `<div class="chunk-big">${de}</div>` : `<div class="chunk-big th">${th}</div>`;
+  frontFace.innerHTML = `
+    <div class="emoji">${emoji}</div>
+    ${frontMain}
+    <div class="tap-hint">แตะเพื่อพลิกดูคำแปล</div>`;
+  const backMain = mode === 'de'
+    ? `<div class="label">คำแปลไทย</div><div class="back-main">${th}</div>`
+    : `<div class="label">Deutsch</div><div class="back-main de">${de}</div>`;
+  backFace.innerHTML = `
+    ${backMain}
+    <div class="label">สถานการณ์ที่ใช้</div>
+    <div class="situation-box"><div class="situation-th">${sitTh}</div><div class="situation-de">${sitDe}</div></div>
+    <div class="label">ประโยคตัวอย่าง</div>
+    <div class="example-box"><div class="example-de">${exDe}</div><div class="example-th">${exTh}</div></div>
+    <div class="audio-row">
+      <button class="audio-btn" id="aChunk">🔊 วลี</button>
+      <button class="audio-btn" id="aEx">🔊 ประโยคตัวอย่าง</button>
+    </div>`;
+  document.getElementById('aChunk').addEventListener('click', e => { e.stopPropagation(); speakGerman(de); });
+  document.getElementById('aEx').addEventListener('click', e => { e.stopPropagation(); speakGerman(exDe); });
+}
+
+function nextCard() {
+  if (pool.length === 0) resetPool();
+  currentItem = deck[pool.pop()];
+  flipped = false;
+  flipper.classList.remove('flipped');
+  render();
+  updateInfo();
+}
+
+function toggleFlip() {
+  if (!currentItem) return;
+  flipped = !flipped;
+  flipper.classList.toggle('flipped', flipped);
+}
+
+document.getElementById('nextBtn').addEventListener('click', nextCard);
+document.getElementById('flipBtn').addEventListener('click', toggleFlip);
+document.getElementById('scene').addEventListener('click', toggleFlip);
+document.getElementById('shuffleBtn').addEventListener('click', () => {
+  resetPool(); currentItem = null; flipped = false;
+  flipper.classList.remove('flipped');
+  frontFace.innerHTML = '<p class="placeholder">สับไพ่ใหม่แล้ว กด "การ์ดใบถัดไป"</p>';
+  backFace.innerHTML = '';
+  updateInfo();
+});
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeDe').classList.toggle('active', m === 'de');
+  document.getElementById('modeTh').classList.toggle('active', m === 'th');
+  flipped = false; flipper.classList.remove('flipped');
+  render();
+}
+document.getElementById('modeDe').addEventListener('click', () => setMode('de'));
+document.getElementById('modeTh').addEventListener('click', () => setMode('th'));
+updateInfo();
+</script>
+</body>
+</html>
